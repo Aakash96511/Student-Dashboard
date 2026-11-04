@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Management Portal | EduPulse{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    <!-- Teacher Hero Header -->
+    <div class="page-header-box">
+        <div>
+            <h2>Faculty Administration Dashboard</h2>
+            <p class="text-muted">Manage student academic records, marks, grading, and attendance</p>
+        </div>
+        <div class="header-actions">
+            <a href="{{ url_for('add_student') }}" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Add New Student</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Analytics KPI Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon-wrapper kpi-indigo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Total Enrolled</span>
+                <h3 class="kpi-value">{{ total_students }}</h3>
+                <span class="badge badge-info">Active Students</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-wrapper kpi-cyan">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Class Average CGPA</span>
+                <h3 class="kpi-value">{{ avg_cgpa }}</h3>
+                <span class="badge {% if avg_cgpa >= 8.0 %}badge-success{% else %}badge-warning{% endif %}">
+                    Scale 10.0
+                </span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-wrapper kpi-emerald">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Class Attendance</span>
+                <h3 class="kpi-value">{{ avg_attendance }}%</h3>
+                <span class="badge {% if avg_attendance >= 75 %}badge-success{% else %}badge-danger{% endif %}">
+                    Department Avg
+                </span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-wrapper kpi-amber">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="7"></circle>
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Honors Tier</span>
+                <h3 class="kpi-value">{{ honors_count }}</h3>
+                <span class="badge badge-success">CGPA ≥ 8.5</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Roster Table Container -->
+    <div class="card-box" style="margin-top: 24px;">
+        <div class="card-box-header flex-wrap-mobile">
+            <div>
+                <h3>Student Roster & Academic Records</h3>
+                <p class="text-muted">Select any student to fill marks, edit coursework, or customize attendance</p>
+            </div>
+
+            <!-- Search and Filter Form -->
+            <form method="GET" action="{{ url_for('dashboard') }}" class="table-search-form">
+                <div class="search-input-wrapper">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" name="search" id="rosterSearch" placeholder="Search by name, roll, or email..." value="{{ current_search }}" onkeyup="filterRosterLive()">
+                </div>
+
+                <select name="course" onchange="this.form.submit()" class="filter-select">
+                    <option value="">All Academic Programs</option>
+                    {% for c in courses %}
+                    <option value="{{ c }}" {% if current_course == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+
+                {% if current_search or current_course %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-sm btn-outline" title="Clear Filters">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Table View -->
+        {% if students %}
+        <div class="table-responsive">
+            <table class="data-table" id="rosterTable">
+                <thead>
+                    <tr>
+                        <th>Student Information</th>
+                        <th>Program & Semester</th>
+                        <th>Calculated CGPA</th>
+                        <th>Attendance</th>
+                        <th>Subjects</th>
+                        <th style="text-align: right;">Administrative Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr class="roster-row">
+                        <td>
+                            <div class="student-cell">
+                                <div class="cell-avatar" style="background-color: {{ s.data.avatar_color }};">
+                                    {{ s.data.full_name[:1] }}
+                                </div>
+                                <div class="cell-info">
+                                    <strong class="student-name">{{ s.data.full_name }}</strong>
+                                    <div class="cell-sub">
+                                        <span class="badge-roll">{{ s.data.roll_no }}</span>
+                                        <span class="text-muted">@{{ s.data.username }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="course-cell">
+                                <span class="course-title">{{ s.data.course }}</span>
+                                <span class="semester-pill">{{ s.data.semester }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cgpa-cell">
+                                <span class="cgpa-badge {% if s.cgpa >= 8.5 %}cgpa-high{% elif s.cgpa >= 7.0 %}cgpa-mid{% else %}cgpa-low{% endif %}">
+                                    {{ "%.2f"|format(s.cgpa) }}
+                                </span>
+                                <small class="text-muted">Target: {{ s.data.target_cgpa }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="att-cell">
+                                <div class="d-flex align-center gap-8">
+                                    <div class="progress-bar-container-xs" style="width: 70px;">
+                                        <div class="progress-bar-fill {% if s.attendance >= 85 %}bg-success{% elif s.attendance >= 75 %}bg-primary{% else %}bg-danger{% endif %}" style="width: {{ s.attendance }}%;"></div>
+                                    </div>
+                                    <strong>{{ s.attendance }}%</strong>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-neutral">{{ s.subject_count }} Enrolled</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <div class="action-buttons-group">
+                                <a href="{{ url_for('teacher_student_detail', student_id=s.data.id) }}" class="btn btn-sm btn-primary" title="Manage coursework, marks, and attendance">
+                                    <span>Manage & Fill Data</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </a>
+
+                                <a href="{{ url_for('teacher_preview_student', student_id=s.data.id) }}" class="btn btn-sm btn-outline" title="Preview Student Portal View">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </a>
+
+                                <form action="{{ url_for('teacher_delete_student', student_id=s.data.id) }}" method="POST" style="margin: 0; display: inline-block;" onsubmit="return confirm('Are you sure you want to delete student {{ s.data.full_name }} ({{ s.data.roll_no }})? This action cannot be undone.');">
+                                    <button type="submit" class="btn btn-sm btn-danger-outline" title="Delete Student">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <h3>No Students Found</h3>
+            <p>No student records match your current filter criteria.</p>
+            <div style="margin-top: 16px;">
+                <a href="{{ url_for('add_student') }}" class="btn btn-primary">Add a New Student</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+function filterRosterLive() {
+    let input = document.getElementById("rosterSearch");
+    let filter = input.value.toLowerCase();
+    let rows = document.querySelectorAll("#rosterTable tbody tr");
+
+    rows.forEach(function(row) {
+        let text = row.innerText.toLowerCase();
+        if (text.indexOf(filter) > -1) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
+</script>
+{% endblock %}

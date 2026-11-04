@@ -1,45 +1,89 @@
+{% extends "base.html" %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Portal Login</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
+{% block title %}Sign In | EduPulse Academic Portal{% endblock %}
 
-    <div class="login-container">
-        <div class="login-card">
+{% block content %}
+<div class="auth-page-wrapper">
+    <div class="auth-card-container">
+        <div class="auth-card">
+            
+            <div class="auth-header">
+                <div class="auth-logo-badge">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                    </svg>
+                </div>
+                <h2>Welcome to EduPulse</h2>
+                <p class="auth-subtitle">Academic Management & Performance Portal</p>
+            </div>
 
-            <h1>Student Portal</h1>
-            <p class="subtitle">Welcome! Please sign in.</p>
+            <form method="POST" action="{{ url_for('login') }}" class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username or Student ID</label>
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <input type="text" id="username" name="username" placeholder="e.g. student or teacher" required autofocus>
+                    </div>
+                </div>
 
-            {% with messages = get_flashed_messages() %}
-                {% for message in messages %}
-                    <p class="error">{{ message }}</p>
-                {% endfor %}
-            {% endwith %}
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label for="password">Password</label>
+                    </div>
+                    <div class="input-icon-wrapper">
+                        <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <input type="password" id="password" name="password" placeholder="Enter your portal password" required>
+                    </div>
+                </div>
 
-            <form method="POST">
-                <label>Username</label>
-                <input type="text" name="username"
-                       placeholder="Enter username" required>
-
-                <label>Password</label>
-                <input type="password" name="password"
-                       placeholder="Enter password" required>
-
-                <button type="submit">Login</button>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Sign In to Portal</span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </button>
             </form>
 
-            <p class="demo-info">
-                Student: student / student123<br>
-                Teacher: teacher / teacher123
-            </p>
+            <div class="auth-demo-section">
+                <div class="divider">
+                    <span>Quick Demo Sign-In</span>
+                </div>
+                <div class="demo-role-grid">
+                    <button type="button" class="btn-demo-pill" onclick="fillCredentials('student', 'student123')">
+                        <span class="demo-avatar student-bg">S</span>
+                        <div class="demo-text">
+                            <strong>Student Demo</strong>
+                            <small>student / student123</small>
+                        </div>
+                    </button>
+                    <button type="button" class="btn-demo-pill" onclick="fillCredentials('teacher', 'teacher123')">
+                        <span class="demo-avatar teacher-bg">T</span>
+                        <div class="demo-text">
+                            <strong>Faculty Demo</strong>
+                            <small>teacher / teacher123</small>
+                        </div>
+                    </button>
+                </div>
+                <p class="demo-hint">Click either role above to instantly autofill and explore!</p>
+            </div>
 
         </div>
     </div>
+</div>
 
-</body>
-</html>
+<script>
+function fillCredentials(user, pass) {
+    document.getElementById('username').value = user;
+    document.getElementById('password').value = pass;
+    document.getElementById('loginForm').submit();
+}
+</script>
+{% endblock %}

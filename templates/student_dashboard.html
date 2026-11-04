@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.full_name }} | Student Academic Portal{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+
+    {% if preview_mode %}
+    <div class="preview-banner">
+        <div class="preview-text">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <strong>Faculty Preview Mode:</strong> You are viewing <strong>{{ student.full_name }}</strong>'s portal.
+        </div>
+        <a href="{{ url_for('teacher_student_detail', student_id=student.id) }}" class="btn btn-sm btn-outline">
+            Return to Student Editor
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Student Hero Profile Banner -->
+    <div class="profile-hero-card">
+        <div class="hero-main">
+            <div class="hero-avatar" style="background-color: {{ student.avatar_color }};">
+                {{ student.full_name[:1] }}
+            </div>
+            <div class="hero-info">
+                <div class="hero-title-row">
+                    <h1>{{ student.full_name }}</h1>
+                    <span class="badge badge-roll">{{ student.roll_no }}</span>
+                </div>
+                <p class="hero-meta">
+                    <span>🎓 {{ student.course }}</span>
+                    <span>•</span>
+                    <span>📅 {{ student.semester }}</span>
+                    <span>•</span>
+                    <span>🏛️ Batch {{ student.batch_year }}</span>
+                </p>
+                {% if student.bio %}
+                <p class="hero-bio">“{{ student.bio }}”</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="hero-actions">
+            {% if role == 'student' %}
+            <a href="{{ url_for('student_profile') }}" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span>Customize Profile</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Target CGPA Tracker Bar -->
+    <div class="target-tracker-card">
+        <div class="tracker-header">
+            <div>
+                <strong>Academic Target Progress</strong>
+                <span class="text-muted">Current CGPA vs Target Goal</span>
+            </div>
+            <div class="tracker-values">
+                <span class="curr-val">{{ "%.2f"|format(cgpa) }}</span>
+                <span class="slash">/</span>
+                <span class="target-val">{{ "%.1f"|format(student.target_cgpa) }} Target</span>
+            </div>
+        </div>
+        <div class="progress-bar-container">
+            {% set pct_target = (cgpa / student.target_cgpa * 100) if student.target_cgpa > 0 else 0 %}
+            {% set progress_width = 100 if pct_target > 100 else (pct_target if pct_target > 0 else 0) %}
+            <div class="progress-bar-fill {% if cgpa >= student.target_cgpa %}bg-success{% else %}bg-primary{% endif %}" style="width: {{ progress_width }}%;"></div>
+        </div>
+        <div class="tracker-footer">
+            {% if cgpa >= student.target_cgpa %}
+                <span class="text-success font-medium">🎯 Congratulations! You have achieved your target CGPA of {{ student.target_cgpa }}!</span>
+            {% else %}
+                <span class="text-muted">{{ "%.2f"|format(student.target_cgpa - cgpa) }} points to reach your target goal of {{ student.target_cgpa }} CGPA.</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Key Performance Indicators (Cards) -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon-wrapper kpi-indigo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="7"></circle>
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Cumulative GPA</span>
+                <h3 class="kpi-value">{{ "%.2f"|format(cgpa) }}</h3>
+                <span class="badge {% if cgpa >= 9.0 %}badge-success{% elif cgpa >= 7.5 %}badge-info{% else %}badge-warning{% endif %}">
+                    {% if cgpa >= 9.0 %}Distinction / A+{% elif cgpa >= 7.5 %}First Class{% elif cgpa >= 6.0 %}Second Class{% else %}Pass{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-wrapper {% if overall_attendance >= 75 %}kpi-emerald{% else %}kpi-rose{% endif %}">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Overall Attendance</span>
+                <h3 class="kpi-value">{{ overall_attendance }}%</h3>
+                <span class="badge {% if overall_attendance >= 85 %}badge-success{% elif overall_attendance >= 75 %}badge-info{% else %}badge-danger{% endif %}">
+                    {% if overall_attendance >= 75 %}Good Standing{% else %}Low Attendance Warning{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-wrapper kpi-cyan">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Current Subjects</span>
+                <h3 class="kpi-value">{{ subjects|length }}</h3>
+                <span class="badge badge-neutral">Active Courses</span>
+            </div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-icon-wrapper kpi-amber">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
+            <div class="kpi-content">
+                <span class="kpi-label">Tasks & Deadlines</span>
+                <h3 class="kpi-value">{{ pending_assignments }}</h3>
+                <span class="badge {% if pending_assignments == 0 %}badge-success{% else %}badge-warning{% endif %}">
+                    {% if pending_assignments == 0 %}All Caught Up!{% else %}Pending Tasks{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advisor / Faculty Feedback Note -->
+    {% if student.teacher_remarks %}
+    <div class="advisory-card">
+        <div class="advisory-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+        </div>
+        <div class="advisory-body">
+            <h4>Academic Faculty Remarks</h4>
+            <p>{{ student.teacher_remarks }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- 2 Column Layout: Academic Subjects & Tasks Tracker -->
+    <div class="portal-grid-two-col">
+
+        <!-- Left Column: Subject Performance -->
+        <div class="portal-col">
+            <div class="card-box">
+                <div class="card-box-header">
+                    <div>
+                        <h3>Subject Performance & Grades</h3>
+                        <p class="text-muted">Course marks and personalized study notes</p>
+                    </div>
+                </div>
+
+                {% if subjects %}
+                <div class="subjects-list">
+                    {% for subj in subjects %}
+                    <div class="subject-item-card">
+                        <div class="subject-item-top">
+                            <div>
+                                <span class="subject-code">{{ subj.code or 'COURSE' }}</span>
+                                <h4 class="subject-name">{{ subj.name }}</h4>
+                                <span class="subject-credits">{{ subj.credits }} Credits</span>
+                            </div>
+                            <div class="subject-grade-box">
+                                <span class="grade-badge grade-{{ subj.grade[0] }}">{{ subj.grade }}</span>
+                                <span class="subject-marks">{{ subj.marks_obtained|int }}/{{ subj.total_marks|int }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Marks Progress Bar -->
+                        {% set pct = (subj.marks_obtained / subj.total_marks * 100) if subj.total_marks > 0 else 0 %}
+                        <div class="progress-bar-container-sm">
+                            <div class="progress-bar-fill {% if pct >= 80 %}bg-success{% elif pct >= 60 %}bg-primary{% else %}bg-warning{% endif %}" style="width: {{ pct }}%;"></div>
+                        </div>
+
+                        <!-- Student Customizable Subject Study Note -->
+                        <div class="subject-note-container">
+                            {% if subj.notes %}
+                            <p class="subject-saved-note">
+                                <strong>📝 My Study Goal / Note:</strong> {{ subj.notes }}
+                            </p>
+                            {% endif %}
+
+                            {% if role == 'student' %}
+                            <details class="note-accordion">
+                                <summary class="note-accordion-toggle">
+                                    {% if subj.notes %}Edit Study Note{% else %}+ Add Personal Study Note{% endif %}
+                                </summary>
+                                <form action="{{ url_for('update_subject_note', subject_id=subj.id) }}" method="POST" class="note-inline-form">
+                                    <textarea name="notes" placeholder="Write your personalized revision targets, lab goals, or study reminders for {{ subj.name }}..." rows="2">{{ subj.notes or '' }}</textarea>
+                                    <button type="submit" class="btn btn-sm btn-primary">Save Note</button>
+                                </form>
+                            </details>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <p>No subjects enrolled yet. Faculty will assign your semester coursework soon.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Subject-wise Attendance Breakdown -->
+            <div class="card-box" style="margin-top: 24px;">
+                <div class="card-box-header">
+                    <div>
+                        <h3>Subject-wise Attendance</h3>
+                        <p class="text-muted">Minimum 75% required for examination eligibility</p>
+                    </div>
+                </div>
+
+                {% if attendance %}
+                <div class="attendance-table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Classes Attended</th>
+                                <th>Percentage</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rec in attendance %}
+                            {% set att_pct = (rec.attended_classes / rec.total_classes * 100)|round(1) if rec.total_classes > 0 else 0 %}
+                            <tr>
+                                <td><strong>{{ rec.subject_name }}</strong></td>
+                                <td>{{ rec.attended_classes }} / {{ rec.total_classes }}</td>
+                                <td>
+                                    <div class="d-flex align-center gap-8">
+                                        <div class="progress-bar-container-xs" style="width: 80px;">
+                                            <div class="progress-bar-fill {% if att_pct >= 85 %}bg-success{% elif att_pct >= 75 %}bg-primary{% else %}bg-danger{% endif %}" style="width: {{ att_pct }}%;"></div>
+                                        </div>
+                                        <span>{{ att_pct }}%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if att_pct >= 75 %}
+                                    <span class="badge badge-success">Eligible</span>
+                                    {% else %}
+                                    <span class="badge badge-danger">Short Attendance</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No attendance records logged yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right Column: Student Study Tasks & Assignments Checklist -->
+        <div class="portal-col">
+            <div class="card-box">
+                <div class="card-box-header">
+                    <div>
+                        <h3>Study Tasks & Assignments</h3>
+                        <p class="text-muted">Organize your deadlines and personalized goals</p>
+                    </div>
+                </div>
+
+                {% if role == 'student' %}
+                <!-- Add Task Form -->
+                <form action="{{ url_for('add_student_task') }}" method="POST" class="task-add-form">
+                    <input type="text" name="title" placeholder="New study task, project, or assignment..." required>
+                    <div class="task-add-controls">
+                        <input type="text" name="due_date" placeholder="Due: e.g. Friday, 5 PM">
+                        <button type="submit" class="btn btn-sm btn-primary">Add Task</button>
+                    </div>
+                </form>
+                {% endif %}
+
+                <!-- Task List -->
+                <div class="tasks-list">
+                    {% for task in assignments %}
+                    <div class="task-item {% if task.status == 'Completed' %}task-completed{% endif %}">
+                        <div class="task-left">
+                            {% if role == 'student' %}
+                            <form action="{{ url_for('toggle_student_task', task_id=task.id) }}" method="POST" style="margin: 0;">
+                                <button type="submit" class="task-checkbox-btn {% if task.status == 'Completed' %}checked{% endif %}" title="Toggle Completed">
+                                    {% if task.status == 'Completed' %}✓{% endif %}
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="task-bullet">•</span>
+                            {% endif %}
+                            
+                            <div class="task-body">
+                                <span class="task-title">{{ task.title }}</span>
+                                <div class="task-meta">
+                                    <span>📅 {{ task.due_date }}</span>
+                                    {% if task.score and task.score != '-' %}
+                                    <span>• Grade: {{ task.score }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="task-right">
+                            <span class="badge {% if task.status == 'Completed' %}badge-success{% else %}badge-neutral{% endif %}">
+                                {{ task.status }}
+                            </span>
+                            {% if role == 'student' %}
+                            <form action="{{ url_for('delete_student_task', task_id=task.id) }}" method="POST" style="margin: 0;">
+                                <button type="submit" class="btn-icon-danger" title="Remove Task">
+                                    &times;
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No study tasks registered. Use the box above to schedule your homework and study goals.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Profile Info Snapshot -->
+            <div class="card-box" style="margin-top: 24px;">
+                <div class="card-box-header">
+                    <div>
+                        <h3>Personal Contact & Info</h3>
+                        <p class="text-muted">Customized student profile data</p>
+                    </div>
+                    {% if role == 'student' %}
+                    <a href="{{ url_for('student_profile') }}" class="btn btn-sm btn-outline">Edit</a>
+                    {% endif %}
+                </div>
+
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="info-label">Full Name</span>
+                        <span class="info-val">{{ student.full_name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email Address</span>
+                        <span class="info-val">{{ student.email or 'Not provided' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Phone Contact</span>
+                        <span class="info-val">{{ student.phone or 'Not provided' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Target CGPA Goal</span>
+                        <span class="info-val"><strong>{{ student.target_cgpa }}</strong> / 10.0</span>
+                    </div>
+                    {% if student.address %}
+                    <div class="info-item">
+                        <span class="info-label">Address / Residence</span>
+                        <span class="info-val">{{ student.address }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
