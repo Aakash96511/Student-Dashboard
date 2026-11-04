@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="login-card">
+
+            <h1>Student Portal</h1>
+            <p class="subtitle">Welcome! Please sign in.</p>
+
+            {% with messages = get_flashed_messages() %}
+                {% for message in messages %}
+                    <p class="error">{{ message }}</p>
+                {% endfor %}
+            {% endwith %}
+
+            <form method="POST">
+                <label>Username</label>
+                <input type="text" name="username"
+                       placeholder="Enter username" required>
+
+                <label>Password</label>
+                <input type="password" name="password"
+                       placeholder="Enter password" required>
+
+                <button type="submit">Login</button>
+            </form>
+
+            <p class="demo-info">
+                Student: student / student123<br>
+                Teacher: teacher / teacher123
+            </p>
+
+        </div>
+    </div>
+
+</body>
+</html>

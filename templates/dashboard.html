@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="dashboard">
+
+    <header>
+        <h2>Student Portal</h2>
+        <div>
+            {{ role }} |
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+    </header>
+
+    <main>
+        <h1>Welcome, {{ name }}!</h1>
+        <p>Academic Dashboard | Demo Portal</p>
+
+        {% if role == "student" %}
+
+        <h2>Academic Overview</h2>
+
+        <div class="cards">
+            <div class="card">
+                <h3>{{ student.cgpa }}</h3>
+                <p>Current CGPA</p>
+            </div>
+
+            <div class="card">
+                <h3>{{ student.attendance }}%</h3>
+                <p>Attendance</p>
+            </div>
+
+            <div class="card">
+                <h3>{{ student.subjects }}</h3>
+                <p>Total Subjects</p>
+            </div>
+
+            <div class="card">
+                <h3>{{ student.assignments }}</h3>
+                <p>Assignments</p>
+            </div>
+        </div>
+
+        <h2>Student Profile</h2>
+
+        <div class="card profile">
+            <p><b>Name:</b> {{ student.name }}</p>
+            <p><b>Roll Number:</b> {{ student.roll }}</p>
+            <p><b>Course:</b> {{ student.course }}</p>
+            <p><b>Semester:</b> {{ student.semester }}</p>
+        </div>
+
+        <h2>Subject Performance</h2>
+
+        <div class="card">
+            {% for subject in subjects %}
+                <p>{{ subject.name }} — {{ subject.marks }}/100</p>
+                <div class="progress">
+                    <div style="width: {{ subject.marks }}%"></div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+
+        <h2>Teacher Dashboard</h2>
+
+        <div class="cards">
+            <div class="card">
+                <h3>1</h3>
+                <p>Demo Students</p>
+            </div>
+
+            <div class="card">
+                <h3>6</h3>
+                <p>Subjects</p>
+            </div>
+
+            <div class="card">
+                <h3>92%</h3>
+                <p>Average Attendance</p>
+            </div>
+        </div>
+
+        <h2>Student Records</h2>
+
+        <div class="card">
+            <p><b>Name:</b> {{ student.name }}</p>
+            <p><b>Roll:</b> {{ student.roll }}</p>
+            <p><b>Course:</b> {{ student.course }}</p>
+            <p><b>CGPA:</b> {{ student.cgpa }}</p>
+            <p><b>Attendance:</b> {{ student.attendance }}%</p>
+        </div>
+
+        {% endif %}
+
+    </main>
+</div>
+
+</body>
+</html>
